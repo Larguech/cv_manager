@@ -1,10 +1,8 @@
-// src/app.module.ts
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, RequestMethod, NestModule } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CvModule } from './cv/cv.module';
-import { UserModule } from './user/user.module';  // Importez le module User
-import { User } from './user/entities/user.entity';
-import { Cv } from './cv/entities/cv.entity';
+import { UserModule } from './user/user.module';
+import { AuthMiddleware } from './middleware/auth.middleware';
 
 @Module({
   imports: [
@@ -13,13 +11,19 @@ import { Cv } from './cv/entities/cv.entity';
       host: 'localhost',
       port: 3306,
       username: 'root',
-      password: '', // Configurez votre mot de passe
+      password: '',
       database: 'cv_manager',
-      entities: [User, Cv],
       synchronize: true,
+      entities: [], // Liste des entités ici
     }),
     CvModule,
-    UserModule,  // Ajoutez UserModule ici
+    UserModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(AuthMiddleware)
+      .forRoutes('**');
+  }
+}

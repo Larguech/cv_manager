@@ -1,29 +1,53 @@
-import { Controller, Post, Body, Get, Param, Put, Delete } from '@nestjs/common';
+import { Controller, Post, Get, Param, Body, Put, Delete, Request } from '@nestjs/common';
 import { CvService } from './cv.service';
-import { CreateCvDto } from './dto/create-cv.dto'; // Vérifiez l'importation correcte
-import { UpdateCvDto } from './dto/update-cv.dto'; // Vérifiez l'importation correcte
+import { CreateCvDto } from './dto/create-cv.dto';
+import { UpdateCvDto } from './dto/update-cv.dto';
+import { UnauthorizedException } from '@nestjs/common';
 
 @Controller('cv')
 export class CvController {
   constructor(private readonly cvService: CvService) {}
 
+  // Créer un CV avec l'ID de l'utilisateur
   @Post()
-  create(@Body() createCvDto: CreateCvDto) {
+  create(@Body() createCvDto: CreateCvDto, @Request() req) {
+    createCvDto.userId = req.userId; // Ajoute l'ID de l'utilisateur dans le DTO
     return this.cvService.create(createCvDto);
   }
 
+  // Voir tous les CVs (accessible par tout utilisateur)
+  @Get()
+  findAll() {
+    return this.cvService.findAll();
+  }
+
+  // Voir un CV particulier (accessible par tout utilisateur)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.cvService.findOne(+id);
+  findOne(@Param('id') id: number) {
+    return this.cvService.findOne(id);
   }
 
+  // Modifier un CV, mais uniquement celui créé par l'utilisateur
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateCvDto: UpdateCvDto) {
-    return this.cvService.update(+id, updateCvDto);
+  async update(@Param('id') id: number, @Body() updateCvDto: UpdateCvDto, @Request() req) {
+    const cv = await this.cvService.findOne(id);
+
+    if (cv.user.id !== req.userId) {
+      throw new UnauthorizedException('You are not authorized to update this CV');
+    }
+
+    return this.cvService.update(id, updateCvDto);
   }
 
+  // Supprimer un CV, mais uniquement celui créé par l'utilisateur
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.cvService.remove(+id);
+  async remove(@Param('id') id: number, @Request() req) {
+    const cv = await this.cvService.findOne(id);
+
+    if (cv.user.id !== req.userId) {
+      throw new UnauthorizedException('You are not authorized to delete this CV');
+    }
+
+    return this.cvService.remove(id);
   }
 }

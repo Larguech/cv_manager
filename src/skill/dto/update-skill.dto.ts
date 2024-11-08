@@ -1,4 +1,6 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateSkillDto } from './create-skill.dto';
-
-export class UpdateSkillDto extends PartialType(CreateSkillDto) {}
+// src/skill/dto/update-skill.dto.ts
+export class UpdateSkillDto {
+    name?: string;
+    description?: string;
+  }
+  
