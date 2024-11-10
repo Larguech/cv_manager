@@ -5,5 +5,5 @@ export class CreateCvDto {
   age: number;
   cin: string;
   job: string;
-  userId: number;  // ID de l'utilisateur auquel le CV est associé
+  userId?: number;   // ID de l'utilisateur auquel le CV est associé
 }
